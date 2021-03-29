@@ -4,7 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
@@ -54,8 +56,28 @@ func main() {
 		nick = defaultNick(h.ID())
 	}
 
+
+	// vaishu adding directory reading file names code
+	var dirPath = "stocks/"
+	var stockFileName = ""
+	var name = ""
+	files, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		fmt.Println(file.Name())
+		stockFileName = file.Name()
+		var extension = filepath.Ext(stockFileName)
+		name = stockFileName[0:len(stockFileName)-len(extension)]
+		fmt.Println(name)
+	}
+	// end vaishu adding code
+
 	// join the room from the cli flag, or the flag default
-	room := *roomFlag
+	//room := *roomFlag
+	// vaishu - changed the above line to the below line so that the chatroom has ticker name
+	room := name
 
 	// join the chat room
 	cr, err := JoinChatRoom(ctx, ps, h.ID(), nick, room)

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -102,11 +103,44 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 	}
 }
 
+//Clay added this function
+func (ui *ChatUI) postOpinion() {
+	var dirPath = "stocks" + "-" + ui.cr.nick + "/"
+	files, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		content, err := ioutil.ReadFile(dirPath + file.Name())
+		if err != nil {
+			panic(err)
+		}
+		var opinion = string(content)
+
+		error := ui.cr.Publish(opinion)
+		if error != nil {
+			panic(error)
+		}
+		ui.displaySelfMessage(opinion)
+
+		//fmt.Println(string(content))
+
+		// fmt.Println(file.Name())
+		// stockFileName = file.Name()
+		// var extension = filepath.Ext(stockFileName)
+		// name = stockFileName[0 : len(stockFileName)-len(extension)]
+		// fmt.Println(name)
+	}
+}
+
 // Run starts the chat event loop in the background, then starts
 // the event loop for the text UI.
 func (ui *ChatUI) Run() error {
 	go ui.handleEvents()
+
 	defer ui.end()
+
+	ui.postOpinion()
 
 	return ui.app.Run()
 }

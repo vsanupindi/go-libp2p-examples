@@ -27,7 +27,7 @@ const DiscoveryServiceTag = "pubsub-chat-example"
 func main() {
 	// parse some flags to set our nickname and the room to join
 	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
-	roomFlag := flag.String("room", "awesome-chat-room", "name of chat room to join")
+	//roomFlag := flag.String("room", "awesome-chat-room", "name of chat room to join")
 	flag.Parse()
 
 	ctx := context.Background()
@@ -56,9 +56,8 @@ func main() {
 		nick = defaultNick(h.ID())
 	}
 
-
 	// vaishu adding directory reading file names code
-	var dirPath = "stocks/"
+	var dirPath = "stocks" + "-" + nick + "/"
 	var stockFileName = ""
 	var name = ""
 	files, err := ioutil.ReadDir(dirPath)
@@ -69,7 +68,7 @@ func main() {
 		fmt.Println(file.Name())
 		stockFileName = file.Name()
 		var extension = filepath.Ext(stockFileName)
-		name = stockFileName[0:len(stockFileName)-len(extension)]
+		name = stockFileName[0 : len(stockFileName)-len(extension)]
 		fmt.Println(name)
 	}
 	// end vaishu adding code

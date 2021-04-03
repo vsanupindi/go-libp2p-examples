@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -123,6 +125,27 @@ func (ui *ChatUI) postOpinion() {
 		}
 		ui.displaySelfMessage(opinion)
 
+		// vaishu
+		var writePath = "sentiments/"
+		f, err := os.OpenFile(writePath + file.Name(), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+
+		b, err := ioutil.ReadFile(writePath + file.Name())
+		if err != nil {
+			panic(err)
+		}
+		s := string(b)
+		// //check whether s contains substring text
+		if !strings.Contains(s, ui.cr.nick) {
+			if _, err = f.WriteString(ui.cr.nick + " - " + opinion + "\n"); err != nil {
+				panic(err)
+			}
+		}
+		// end vaishu
+
 		//fmt.Println(string(content))
 
 		// fmt.Println(file.Name())
@@ -140,7 +163,9 @@ func (ui *ChatUI) Run() error {
 
 	defer ui.end()
 
+	// vaishu commented this out - not anymore
 	ui.postOpinion()
+
 
 	return ui.app.Run()
 }

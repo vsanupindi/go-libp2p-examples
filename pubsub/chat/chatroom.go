@@ -62,6 +62,9 @@ func JoinChatRoom(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID, nickna
 		Messages: make(chan *ChatMessage, ChatRoomBufSize),
 	}
 
+	// added by Vaishu
+	//cm := new(ChatMessage)
+	//cr.Messages <- cm
 	// start reading messages from the subscription in a loop
 	go cr.readLoop()
 	return cr, nil

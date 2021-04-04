@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"flag"
+	//"flag" -- add back in for cmd util
 	"fmt"
-	"io/ioutil"
+	//"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"github.com/libp2p/go-libp2p"
@@ -15,7 +14,8 @@ import (
 
 	"github.com/libp2p/go-libp2p-core/host"
 
-	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	// dht "github.com/libp2p/go-libp2p-kad-dht"
+	// dht_opts "github.com/libp2p/go-libp2p-kad-dht/opts"
 )
 
 // DiscoveryInterval is how often we re-publish our mDNS records.
@@ -26,9 +26,9 @@ const DiscoveryServiceTag = "pubsub-chat-example"
 
 func main() {
 	// parse some flags to set our nickname and the room to join
-	nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
+	//nickFlag := flag.String("nick", "", "nickname to use in chat. will be generated if empty")
 	//roomFlag := flag.String("room", "awesome-chat-room", "name of chat room to join")
-	flag.Parse()
+	//flag.Parse()
 
 	ctx := context.Background()
 
@@ -38,8 +38,9 @@ func main() {
 		panic(err)
 	}
 
-	// create a new PubSub service using the GossipSub router
-	ps, err := pubsub.NewGossipSub(ctx, h)
+	//initialize kademlia DHT
+	stockDHT := new(StockReviewDHT)
+	err = stockDHT.initKadDHT(ctx, h)
 	if err != nil {
 		panic(err)
 	}
@@ -50,44 +51,10 @@ func main() {
 		panic(err)
 	}
 
-	// use the nickname from the cli flag, or a default if blank
-	nick := *nickFlag
-	if len(nick) == 0 {
-		nick = defaultNick(h.ID())
-	}
-
-	// vaishu adding directory reading file names code
-	var dirPath = "stocks" + "-" + nick + "/"
-	var stockFileName = ""
-	var name = ""
-	files, err := ioutil.ReadDir(dirPath)
-	if err != nil {
-		panic(err)
-	}
-	for _, file := range files {
-		fmt.Println(file.Name())
-		stockFileName = file.Name()
-		var extension = filepath.Ext(stockFileName)
-		name = stockFileName[0 : len(stockFileName)-len(extension)]
-		fmt.Println(name)
-	}
-	// end vaishu adding code
-
-	// join the room from the cli flag, or the flag default
-	//room := *roomFlag
-	// vaishu - changed the above line to the below line so that the chatroom has ticker name
-	room := name
-
-	// join the chat room
-	cr, err := JoinChatRoom(ctx, ps, h.ID(), nick, room)
-	if err != nil {
-		panic(err)
-	}
-
-	// draw the UI
-	ui := NewChatUI(cr)
-	if err = ui.Run(); err != nil {
-		printErr("error running text UI: %s", err)
+	//nick := defaultNick(h.ID())
+	for true {
+		time.Sleep(2*time.Second)
+		stockDHT.kadDHT.RoutingTable().Print()
 	}
 }
 
@@ -122,6 +89,8 @@ func (n *discoveryNotifee) HandlePeerFound(pi peer.AddrInfo) {
 	if err != nil {
 		fmt.Printf("error connecting to peer %s: %s\n", pi.ID.Pretty(), err)
 	}
+	
+	//TODO: update dht store
 }
 
 // setupDiscovery creates an mDNS discovery service and attaches it to the libp2p Host.

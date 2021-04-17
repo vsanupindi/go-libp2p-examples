@@ -32,6 +32,7 @@ type ChatRoom struct {
 // ChatMessage gets converted to/from JSON and sent in the body of pubsub messages.
 type ChatMessage struct {
 	Message    string
+	Opinion    bool
 	SenderID   string
 	SenderNick string
 }
@@ -74,6 +75,22 @@ func JoinChatRoom(ctx context.Context, ps *pubsub.PubSub, selfID peer.ID, nickna
 func (cr *ChatRoom) Publish(message string) error {
 	m := ChatMessage{
 		Message:    message,
+		Opinion:    false,
+		SenderID:   cr.self.Pretty(),
+		SenderNick: cr.nick,
+	}
+	msgBytes, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	return cr.topic.Publish(cr.ctx, msgBytes)
+}
+
+//Used to distinguish opinions from regular chat messages (Clay)
+func (cr *ChatRoom) PublishOpinion(message string) error {
+	m := ChatMessage{
+		Message:    message,
+		Opinion:    true,
 		SenderID:   cr.self.Pretty(),
 		SenderNick: cr.nick,
 	}

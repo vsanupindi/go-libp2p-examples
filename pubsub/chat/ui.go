@@ -69,6 +69,24 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 			return
 		}
 
+		if line == "/share" {
+			var dirPath = "stocks" + "-" + cr.nick + "/"
+			files, err := ioutil.ReadDir(dirPath)
+			if err != nil {
+				panic(err)
+			}
+			for _, file := range files {
+				if file.Name() == cr.roomName+".txt" {
+					content, err := ioutil.ReadFile(dirPath + file.Name())
+					if err != nil {
+						panic(err)
+					}
+					var opinion = string(content)
+					line = opinion
+				}
+			}
+		}
+
 		// send the line onto the input chan and reset the field text
 		inputCh <- line
 		input.SetText("")
@@ -127,7 +145,7 @@ func (ui *ChatUI) postOpinion() {
 
 		// vaishu
 		var writePath = "sentiments/"
-		f, err := os.OpenFile(writePath + file.Name(), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+		f, err := os.OpenFile(writePath+file.Name(), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 		if err != nil {
 			panic(err)
 		}
@@ -165,7 +183,6 @@ func (ui *ChatUI) Run() error {
 
 	// vaishu commented this out - not anymore
 	ui.postOpinion()
-
 
 	return ui.app.Run()
 }

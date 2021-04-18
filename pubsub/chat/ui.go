@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"os"
+	"reflect"
 	"strings"
 	"time"
 
@@ -133,7 +133,7 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 }
 
 //Clay added this function
-func (ui *ChatUI) postOpinion() {
+/*func (ui *ChatUI) postOpinion() {
 	var dirPath = "stocks" + "-" + ui.cr.nick + "/"
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
@@ -181,7 +181,7 @@ func (ui *ChatUI) postOpinion() {
 		// name = stockFileName[0 : len(stockFileName)-len(extension)]
 		// fmt.Println(name)
 	}
-}
+}*/
 
 // Run starts the chat event loop in the background, then starts
 // the event loop for the text UI.
@@ -191,7 +191,7 @@ func (ui *ChatUI) Run() error {
 	defer ui.end()
 
 	// vaishu commented this out - not anymore
-	ui.postOpinion()
+	//ui.postOpinion()
 
 	return ui.app.Run()
 }
@@ -218,13 +218,31 @@ func (ui *ChatUI) refreshPeers() {
 	ui.app.Draw()
 }
 
+// vaishu
+func getOpinionVal(cm *ChatMessage) bool{
+	r := reflect.ValueOf(cm)
+	f := reflect.Indirect(r).FieldByName("Opinion")
+	return bool(f.Bool())
+}
+
+func getMessageVal(cm *ChatMessage) string{
+	r := reflect.ValueOf(cm)
+	f := reflect.Indirect(r).FieldByName("Message")
+	return string(f.String())
+}
+
 // displayChatMessage writes a ChatMessage from the room to the message window,
 // with the sender's nick highlighted in green.
 //THIS IS WHERE WE CHECK FOR OPINIONS AND SAVE THEM IF TRUE
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
+	if cm.Opinion == true {
+		// can do something here for storing the data?
+	}
 	//localOpinions = append(localOpinions, [Opinion Message Struct Variable Goes Here]})
+	//fmt.Fprintf(ui.msgW, getMessageVal(cm))
+	//fmt.Fprintf(ui.msgW, "%t \n", getOpinionVal(cm))
 }
 
 // displaySelfMessage writes a message from ourself to the message window,
@@ -245,15 +263,29 @@ func (ui *ChatUI) handleEvents() {
 		select {
 		case input := <-ui.inputCh:
 			// when the user types in a line, publish it to the chat room and print to the message window
-			err := ui.cr.Publish(input)
-			if err != nil {
-				printErr("publish error: %s", err)
-			}
-			ui.displaySelfMessage(input)
+			// vaishu
+			// vaishu - here we need to see if the inputCh is JSON or not and
+			// use Publish or PublishOpinion respectively
+			if strings.Contains(input, "{"){
+				err := ui.cr.PublishOpinion(input)
+				if err != nil {
+					printErr("publish error: %s", err)
+				}
+				//ui.displaySelfMessage(input)
+			} else {
+				err := ui.cr.Publish(input)
+				if err != nil {
+					printErr("publish error: %s", err)
+				}
+				//ui.displaySelfMessage("Here")
+				ui.displaySelfMessage(input)
+		}
+			// end vaishu
 
 		case m := <-ui.cr.Messages:
 			// when we receive a message from the chat room, print it to the message window
 			ui.displayChatMessage(m)
+			// vaishu - here we need to go to displayChatMessage
 
 		case <-peerRefreshTicker.C:
 			// refresh the list of peers in the chat room periodically

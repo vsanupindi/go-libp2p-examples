@@ -26,6 +26,15 @@ type ChatUI struct {
 	doneCh  chan struct{}
 }
 
+type OpinionMessage struct {
+	user    string
+	stock   string
+	numeric int
+	opinion string
+}
+
+var localOpinions []OpinionMessage // locally stored list of recieved opinions
+
 // NewChatUI returns a new ChatUI struct that controls the text UI.
 // It won't actually do anything until you call Run().
 func NewChatUI(cr *ChatRoom) *ChatUI {
@@ -211,9 +220,11 @@ func (ui *ChatUI) refreshPeers() {
 
 // displayChatMessage writes a ChatMessage from the room to the message window,
 // with the sender's nick highlighted in green.
+//THIS IS WHERE WE CHECK FOR OPINIONS AND SAVE THEM IF TRUE
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
 	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
+	//localOpinions = append(localOpinions, [Opinion Message Struct Variable Goes Here]})
 }
 
 // displaySelfMessage writes a message from ourself to the message window,

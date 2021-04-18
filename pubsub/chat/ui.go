@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -27,10 +28,15 @@ type ChatUI struct {
 }
 
 type OpinionMessage struct {
-	user    string
-	stock   string
-	numeric int
-	opinion string
+	User    string
+	Stock   string
+	Numeric string
+	Opinion string
+}
+
+type Person struct {
+	First string
+	Last  string
 }
 
 var localOpinions []OpinionMessage // locally stored list of recieved opinions
@@ -219,13 +225,13 @@ func (ui *ChatUI) refreshPeers() {
 }
 
 // vaishu
-func getOpinionVal(cm *ChatMessage) bool{
+func getOpinionVal(cm *ChatMessage) bool {
 	r := reflect.ValueOf(cm)
 	f := reflect.Indirect(r).FieldByName("Opinion")
 	return bool(f.Bool())
 }
 
-func getMessageVal(cm *ChatMessage) string{
+func getMessageVal(cm *ChatMessage) string {
 	r := reflect.ValueOf(cm)
 	f := reflect.Indirect(r).FieldByName("Message")
 	return string(f.String())
@@ -236,11 +242,21 @@ func getMessageVal(cm *ChatMessage) string{
 //THIS IS WHERE WE CHECK FOR OPINIONS AND SAVE THEM IF TRUE
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
-	fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
+
 	if cm.Opinion == true {
-		// can do something here for storing the data?
+		var newOpinion OpinionMessage
+		recievedMessage := []byte(cm.Message)
+		json.Unmarshal(recievedMessage, &newOpinion)
+		fmt.Println(newOpinion)
+		localOpinions = append(localOpinions, newOpinion)
+		// for _, op := range localOpinions {
+		// 	fmt.Printf("%+v", op)
+		// }
+		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, "STOCK OPINION - "+newOpinion.Opinion)
+	} else {
+		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
 	}
-	//localOpinions = append(localOpinions, [Opinion Message Struct Variable Goes Here]})
+
 	//fmt.Fprintf(ui.msgW, getMessageVal(cm))
 	//fmt.Fprintf(ui.msgW, "%t \n", getOpinionVal(cm))
 }
@@ -266,7 +282,7 @@ func (ui *ChatUI) handleEvents() {
 			// vaishu
 			// vaishu - here we need to see if the inputCh is JSON or not and
 			// use Publish or PublishOpinion respectively
-			if strings.Contains(input, "{"){
+			if strings.Contains(input, "{") {
 				err := ui.cr.PublishOpinion(input)
 				if err != nil {
 					printErr("publish error: %s", err)
@@ -279,7 +295,7 @@ func (ui *ChatUI) handleEvents() {
 				}
 				//ui.displaySelfMessage("Here")
 				ui.displaySelfMessage(input)
-		}
+			}
 			// end vaishu
 
 		case m := <-ui.cr.Messages:

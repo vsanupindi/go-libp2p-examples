@@ -1,6 +1,1 @@
-{
-  "User": {"Clay"},
-  "Stock": {"AAPL"},
-  "Numeric": {"10"},
-  "Opinion": {"Apple is making really good decisions right now"}
-}
+{"User": "Clay","Stock": "AAPL","Numeric": "10","Opinion": "Apple is making really good decisions right now"}

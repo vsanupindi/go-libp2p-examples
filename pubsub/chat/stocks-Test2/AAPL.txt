@@ -1,1 +1,1 @@
-{"User": "Clay","Stock": "AAPL","Numeric": "10","Opinion": "Apple is making really good decisions right now"}
+{"User": "Test2","Stock": "AAPL","Numeric": "10","Opinion": "Apple products are overpriced, really, there's no reason to not go with a PC"}

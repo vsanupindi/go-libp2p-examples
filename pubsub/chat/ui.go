@@ -39,7 +39,7 @@ type Person struct {
 	Last  string
 }
 
-var localOpinions []OpinionMessage // locally stored list of recieved opinions
+var localOpinions []*OpinionMessage // locally stored list of recieved opinions
 
 // NewChatUI returns a new ChatUI struct that controls the text UI.
 // It won't actually do anything until you call Run().
@@ -245,13 +245,26 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 
 	if cm.Opinion == true {
 		var newOpinion OpinionMessage
+		original := true
 		recievedMessage := []byte(cm.Message)
 		json.Unmarshal(recievedMessage, &newOpinion)
-		fmt.Println(newOpinion)
-		localOpinions = append(localOpinions, newOpinion)
-		// for _, op := range localOpinions {
-		// 	fmt.Printf("%+v", op)
-		// }
+		//fmt.Println(newOpinion)
+		for _, op := range localOpinions {
+			if op.User == newOpinion.User && op.Stock == newOpinion.Stock {
+				op.SetOpinion(newOpinion.Opinion)
+				op.SetNumeric(newOpinion.Numeric)
+				original = false
+			}
+		}
+		if original == true {
+			localOpinions = append(localOpinions, &newOpinion)
+			fmt.Println("ORIGINAL")
+		}
+
+		for _, op := range localOpinions {
+			fmt.Println("%v", op)
+		}
+
 		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, "STOCK OPINION - "+newOpinion.Opinion)
 	} else {
 		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
@@ -259,6 +272,13 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 
 	//fmt.Fprintf(ui.msgW, getMessageVal(cm))
 	//fmt.Fprintf(ui.msgW, "%t \n", getOpinionVal(cm))
+}
+
+func (o *OpinionMessage) SetOpinion(op string) {
+	o.Opinion = op
+}
+func (o *OpinionMessage) SetNumeric(num string) {
+	o.Numeric = num
 }
 
 // displaySelfMessage writes a message from ourself to the message window,

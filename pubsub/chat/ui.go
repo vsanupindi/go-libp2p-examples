@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,6 +82,28 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 		// bail if requested
 		if line == "/quit" {
 			app.Stop()
+			return
+		}
+
+		if line == "/avgscore" {
+			counter := 0
+			total := 0
+			avg := 0.0
+			for _, op := range localOpinions {
+				totalval, interror := strconv.ParseInt(op.Numeric, 10, 64)
+				if interror != nil {
+					printErr("publish error: %s", interror)
+					input.SetText("")
+					return
+				}
+				total = total + int(totalval)
+				counter = counter + 1
+			}
+			if counter > 0 && total > 0 {
+				avg = float64(total / counter)
+			}
+			fmt.Fprintf(msgBox, "%s %f\n", "Average Score for "+cr.roomName+":", avg)
+			input.SetText("")
 			return
 		}
 
@@ -265,7 +288,7 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 			fmt.Println("%v", op)
 		}
 
-		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, "STOCK OPINION - "+newOpinion.Opinion)
+		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, "STOCK OPINION - "+newOpinion.Opinion+" | STOCK SCORE - "+newOpinion.Numeric)
 	} else {
 		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
 	}

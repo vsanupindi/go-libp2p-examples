@@ -1,1 +1,1 @@
-{"User": "Clay","Stock": "AAPL","Numeric": "8","Opinion": "Apple is the best"}
+{"User": "Greg","Stock": "AAPL","Numeric": "8","Opinion": "Apple is the best"}

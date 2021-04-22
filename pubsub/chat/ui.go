@@ -85,6 +85,7 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 			return
 		}
 
+		//Gets the average score of all saved opinions and displays it - Clay
 		if line == "/avgscore" {
 			counter := 0
 			total := 0
@@ -107,6 +108,23 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 			return
 		}
 
+		//Lists out all recieved opinions in the chat terminal - Clay
+		if line == "/listopinions" {
+			isOpinionSaved := false
+			prompt := withColor("blue", fmt.Sprintf("%s", "Listing All Received Opinions:"))
+			fmt.Fprintf(msgBox, "\n%s %s\n", prompt, "")
+			for _, op := range localOpinions {
+				isOpinionSaved = true
+				fmt.Fprintf(msgBox, "%s %s\n", op.User+" ("+op.Stock+" Stock Rating = "+op.Numeric+"): ", op.Opinion)
+			}
+			if isOpinionSaved == false {
+				fmt.Fprintf(msgBox, "%s %s\n", "No Opinions have been recieved", "")
+			}
+			input.SetText("")
+			return
+		}
+
+		//Shares your opinion with all currently subscribed users - Clay
 		if line == "/share" {
 			var dirPath = "stocks" + "-" + cr.nick + "/"
 			files, err := ioutil.ReadDir(dirPath)
@@ -266,24 +284,29 @@ func getMessageVal(cm *ChatMessage) string {
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
 
+	//If the chat message is an opinion, unpack the json from its message into an opinion struct
+	//Then save that struct locally to be referenced later
 	if cm.Opinion == true {
 		var newOpinion OpinionMessage
 		original := true
 		recievedMessage := []byte(cm.Message)
 		json.Unmarshal(recievedMessage, &newOpinion)
+		newOpinion.User = cm.SenderNick
 		//fmt.Println(newOpinion)
 		for _, op := range localOpinions {
+			//If the user has already shared an opinion on this stock, update it instead of adding a new entry
 			if op.User == newOpinion.User && op.Stock == newOpinion.Stock {
 				op.SetOpinion(newOpinion.Opinion)
 				op.SetNumeric(newOpinion.Numeric)
 				original = false
 			}
 		}
+		//If this is a new opinion, add a new entry into the local array
 		if original == true {
 			localOpinions = append(localOpinions, &newOpinion)
 			fmt.Println("ORIGINAL")
 		}
-
+		//Print for testing purposes
 		for _, op := range localOpinions {
 			fmt.Println("%v", op)
 		}

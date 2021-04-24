@@ -1,0 +1,1 @@
+{"User": "Michael Bloomberg","Stock": "AAPL","Numeric": "92","Opinion": "I expect that consumers will really resonate with the concept behind the new Airtags"}

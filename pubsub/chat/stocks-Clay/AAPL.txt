@@ -1,1 +1,0 @@
-{"User": "Clay","Stock": "GME","Numeric": "70","Opinion": "Apple is the bwurst"}

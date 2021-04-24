@@ -1,0 +1,1 @@
+{"User": "Clay","Stock": "GME","Numeric": "60","Opinion": "I will never understand how Apple got to the point where consumers are impressed by a matching purple iPhone and iMac"}

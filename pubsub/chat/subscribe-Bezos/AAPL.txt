@@ -1,0 +1,1 @@
+{"User": "Jeff Bezos","Stock": "AAPL","Numeric": "60","Opinion": "The new products presentated at the April 20th Apple event were not very exciting; I do not expect their value to increase"}

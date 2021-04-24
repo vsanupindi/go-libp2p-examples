@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// vaishu adding directory reading file names code
-	var dirPath = "stocks" + "-" + nick + "/"
+	var dirPath = "subscribe" + "-" + nick + "/"
 	var stockFileName = ""
 	var name = ""
 	files, err := ioutil.ReadDir(dirPath)

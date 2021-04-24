@@ -1,0 +1,1 @@
+{"User": "Dell","Stock": "AAPL","Numeric": "45","Opinion": "Apple products are overpriced, really, there's no reason to not go with a Dell"}

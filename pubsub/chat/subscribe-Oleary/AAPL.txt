@@ -1,0 +1,1 @@
+{"User": "Oleary","Stock": "AAPL","Numeric": "80","Opinion": "While their presentation was pretty much a bunch of new colors, younger consumers love this kind of stuff!"}

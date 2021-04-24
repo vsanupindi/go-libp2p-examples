@@ -1,0 +1,1 @@
+{"User": "Musk","Stock": "AAPL","Numeric": "99","Opinion": "I've always wanted a matching purple iPhone and iMac"}

@@ -33,6 +33,7 @@ type OpinionMessage struct {
 	Stock   string
 	Numeric string
 	Opinion string
+	PeerID  string
 }
 
 type Person struct {
@@ -93,7 +94,7 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 			for _, op := range localOpinions {
 				totalval, interror := strconv.ParseInt(op.Numeric, 10, 64)
 				if interror != nil {
-					printErr("publish error: %s", interror)
+					printErr("avgscore error: %s", interror)
 					input.SetText("")
 					return
 				}
@@ -101,9 +102,10 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 				counter = counter + 1
 			}
 			if counter > 0 && total > 0 {
-				avg = float64(total / counter)
+				avg = float64(total) / float64(counter)
 			}
-			fmt.Fprintf(msgBox, "%s %f\n", "Average Score for "+cr.roomName+":", avg)
+			prompt := withColor("yellow", fmt.Sprintf("%s", "Average Numerical Opinion Score for "+cr.roomName+":"))
+			fmt.Fprintf(msgBox, "%s %f\n", prompt, avg)
 			input.SetText("")
 			return
 		}
@@ -111,11 +113,12 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 		//Lists out all recieved opinions in the chat terminal - Clay
 		if line == "/listopinions" {
 			isOpinionSaved := false
-			prompt := withColor("blue", fmt.Sprintf("%s", "Listing All Received Opinions:"))
+			prompt := withColor("yellow", fmt.Sprintf("%s", "Listing All Received Opinions:"))
 			fmt.Fprintf(msgBox, "\n%s %s\n", prompt, "")
 			for _, op := range localOpinions {
 				isOpinionSaved = true
-				fmt.Fprintf(msgBox, "%s %s\n", op.User+" ("+op.Stock+" Stock Rating = "+op.Numeric+"): ", op.Opinion)
+				name := withColor("blue", fmt.Sprintf("%s", op.User+" ("+op.Stock+" Stock Rating = "+op.Numeric+"): "))
+				fmt.Fprintf(msgBox, "%s %s\n", name, op.Opinion)
 			}
 			if isOpinionSaved == false {
 				fmt.Fprintf(msgBox, "%s %s\n", "No Opinions have been recieved", "")
@@ -141,6 +144,8 @@ func NewChatUI(cr *ChatRoom) *ChatUI {
 					line = opinion
 				}
 			}
+			prompt := withColor("yellow", fmt.Sprintf("%s", "~Sharing Opinion~"))
+			fmt.Fprintf(msgBox, "%s %s\n", prompt, "")
 		}
 
 		// send the line onto the input chan and reset the field text
@@ -280,7 +285,8 @@ func getMessageVal(cm *ChatMessage) string {
 
 // displayChatMessage writes a ChatMessage from the room to the message window,
 // with the sender's nick highlighted in green.
-//THIS IS WHERE WE CHECK FOR OPINIONS AND SAVE THEM IF TRUE
+// If the message is actually an opinion, notify the user and save in the array
+// If the opinion already exists in the array, update it if it changes
 func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	prompt := withColor("green", fmt.Sprintf("<%s>:", cm.SenderNick))
 
@@ -289,29 +295,63 @@ func (ui *ChatUI) displayChatMessage(cm *ChatMessage) {
 	if cm.Opinion == true {
 		var newOpinion OpinionMessage
 		original := true
+		displayUpdate := true
 		recievedMessage := []byte(cm.Message)
 		json.Unmarshal(recievedMessage, &newOpinion)
+		//Fill in the JSON with the user's proper name and ID
 		newOpinion.User = cm.SenderNick
+		newOpinion.PeerID = cm.SenderID
+
+		//Correct score to be between 0 and 100
+		numericVal, interror := strconv.ParseInt(newOpinion.Numeric, 10, 64)
+		if interror != nil {
+			printErr("numericVal error: %s", interror)
+		}
+
+		if numericVal < 0 {
+			newOpinion.Numeric = "0"
+		}
+		if numericVal > 100 {
+			newOpinion.Numeric = "100"
+		}
+
+		//Correct name of stock, just in case that the file and stock name don't match
+		newOpinion.Stock = ui.cr.roomName
+
 		//fmt.Println(newOpinion)
+
+		//Check to see if this is a new opinion, or one that needs to be updated
 		for _, op := range localOpinions {
 			//If the user has already shared an opinion on this stock, update it instead of adding a new entry
-			if op.User == newOpinion.User && op.Stock == newOpinion.Stock {
-				op.SetOpinion(newOpinion.Opinion)
-				op.SetNumeric(newOpinion.Numeric)
+			if op.User == newOpinion.User && op.Stock == newOpinion.Stock && op.PeerID == newOpinion.PeerID {
+				if op.Opinion == newOpinion.Opinion && op.Numeric == newOpinion.Numeric {
+					displayUpdate = false
+				} else {
+					op.SetOpinion(newOpinion.Opinion)
+					op.SetNumeric(newOpinion.Numeric)
+				}
 				original = false
+
 			}
 		}
 		//If this is a new opinion, add a new entry into the local array
 		if original == true {
 			localOpinions = append(localOpinions, &newOpinion)
-			fmt.Println("ORIGINAL")
+			//fmt.Println("ORIGINAL")
 		}
 		//Print for testing purposes
-		for _, op := range localOpinions {
-			fmt.Println("%v", op)
+		// for _, op := range localOpinions {
+		// 	fmt.Println("%v", op)
+		// }
+
+		//If the opinion changed, display it for the user
+		if displayUpdate == true && original == false {
+			fmt.Fprintf(ui.msgW, "%s %s\n", prompt, "UPDATED STOCK OPINION - "+newOpinion.Opinion+" | STOCK SCORE - "+newOpinion.Numeric)
+		}
+		if displayUpdate == true && original == true {
+			fmt.Fprintf(ui.msgW, "%s %s\n", prompt, "NEW STOCK OPINION - "+newOpinion.Opinion+" | STOCK SCORE - "+newOpinion.Numeric)
 		}
 
-		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, "STOCK OPINION - "+newOpinion.Opinion+" | STOCK SCORE - "+newOpinion.Numeric)
 	} else {
 		fmt.Fprintf(ui.msgW, "%s %s\n", prompt, cm.Message)
 	}
